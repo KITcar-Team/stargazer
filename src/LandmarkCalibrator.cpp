@@ -22,8 +22,9 @@
 
 using namespace stargazer;
 
-LandmarkCalibrator::LandmarkCalibrator(std::string cfgfile) {
-    readConfig(cfgfile, camera_intrinsics_, landmarks_);
+LandmarkCalibrator::LandmarkCalibrator(const std::string& cam_cfgfile, const std::string& map_cfgfile) {
+    readCamConfig(cam_cfgfile, camera_intrinsics_);
+    readMapConfig(map_cfgfile, landmarks_);
 };
 
 void LandmarkCalibrator::AddReprojectionResidualBlocks(

@@ -24,11 +24,8 @@
 
 using namespace stargazer;
 
-CeresLocalizer::CeresLocalizer(const std::string& cfgfile) : CeresLocalizer(cfgfile, false) {
-}
-
-CeresLocalizer::CeresLocalizer(const std::string& cfgfile, bool estimate_2d_pose)
-        : Localizer(cfgfile), estimate_2d_pose(estimate_2d_pose) {
+CeresLocalizer::CeresLocalizer(const std::string& cam_cfgfile, const std::string& map_cfgfile, bool estimate_2d_pose)
+        : Localizer(cam_cfgfile, map_cfgfile), estimate_2d_pose(estimate_2d_pose) {
 
     // Convert landmark points to worldcoordinates once.
     for (auto& el : landmarks) {

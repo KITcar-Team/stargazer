@@ -41,8 +41,8 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param cfgfile Path to map file with camera intrinsics and landmark poses.
-     * @remark The config file has to be generated with ::writeConfig!
+     * @param cfgfile Path to map file with landmark poses.
+     * @remark The config file has to be generated with ::writeMapConfig!
      */
     LandmarkFinder(std::string cfgfile);
     /**

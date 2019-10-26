@@ -39,20 +39,11 @@ public:
      * @brief Constructor.
      *
      * @param cfgfile Path to map file with camera intrinsics and landmark poses.
-     * @remark The config file has to be generated with ::writeConfig!
-     * @remark The CeresLocalizer converts all landmark points into world coordinates after readin!
-     */
-    CeresLocalizer(const std::string& cfgfile);
-
-    /**
-     * @brief Constructor.
-     *
-     * @param cfgfile Path to map file with camera intrinsics and landmark poses.
      * @param estimae_2d_pose whether the whole 3d pose shall be estimatet or just the 2d pose.
      * @remark The config file has to be generated with ::writeConfig!
      * @remark The CeresLocalizer converts all landmark points into world coordinates after readin!
      */
-    CeresLocalizer(const std::string& cfgfile, bool estimate_2d_pose);
+    CeresLocalizer(const std::string& cam_cfgfile, const std::string& map_cfgfile, bool estimate_2d_pose = false);
 
     /**
      * @brief Main update method. Computes pose from landmark observations and stores it in Localizer::ego_pose

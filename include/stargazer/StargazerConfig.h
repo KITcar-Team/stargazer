@@ -28,25 +28,28 @@
 
 namespace stargazer {
 
+inline YAML::Node loadYaml(const std::string& cfgfile) {
+  YAML::Node config;
+  try {
+      config = YAML::LoadFile(cfgfile);
+  } catch (YAML::BadFile& e) {
+      std::string msg = "Stargazer config file does not exist: " + cfgfile;
+      throw std::runtime_error(msg);
+  } catch (YAML::ParserException& e) {
+      std::string msg = "Wrong YAML syntax in stargazer config file: " + cfgfile;
+      throw std::runtime_error(msg);
+  }
+  return config;
+}
+
 /**
  * @brief
  *
  * @param cfgfile
  * @param camera_intrinsics
- * @param landmarks
  */
-inline void readConfig(const std::string& cfgfile, camera_params_t& camera_intrinsics, landmark_map_t& landmarks) {
-    YAML::Node config;
-
-    try {
-        config = YAML::LoadFile(cfgfile);
-    } catch (YAML::BadFile& e) {
-        std::string msg = "Stargazer config file does not exist: " + cfgfile;
-        throw std::runtime_error(msg);
-    } catch (YAML::ParserException& e) {
-        std::string msg = "Wrong YAML syntax in stargazer config file: " + cfgfile;
-        throw std::runtime_error(msg);
-    }
+inline void readCamConfig(const std::string& cfgfile, camera_params_t& camera_intrinsics) {
+    YAML::Node config(loadYaml(cfgfile));
 
     if (config["CameraIntrinsics"]) {
         camera_intrinsics[(int)INTRINSICS::fu] = config["CameraIntrinsics"]["fu"].as<double>();
@@ -54,9 +57,19 @@ inline void readConfig(const std::string& cfgfile, camera_params_t& camera_intri
         camera_intrinsics[(int)INTRINSICS::u0] = config["CameraIntrinsics"]["u0"].as<double>();
         camera_intrinsics[(int)INTRINSICS::v0] = config["CameraIntrinsics"]["v0"].as<double>();
     } else {
-        std::string msg = "Stargazer Config file is missing camera_intrinsics!: " + cfgfile;
+        std::string msg = "Stargazer camera config file is missing CameraIntrinics!: " + cfgfile;
         throw std::runtime_error(msg);
     }
+}
+
+/**
+ * @brief
+ *
+ * @param cfgfile
+ * @param landmarks
+ */
+inline void readMapConfig(const std::string& cfgfile, landmark_map_t& landmarks) {
+    YAML::Node config(loadYaml(cfgfile));
 
     if (config["Landmarks"]) {
         for (size_t i = 0; i < config["Landmarks"].size(); i++) {
@@ -73,7 +86,7 @@ inline void readConfig(const std::string& cfgfile, camera_params_t& camera_intri
             landmarks[id].pose = lm_pose;
         }
     } else {
-        std::string msg = "Stargazer Config file is missing landmarks!: " + cfgfile;
+        std::string msg = "Stargazer map config file is missing Landmarks!: " + cfgfile;
         throw std::runtime_error(msg);
     }
 }
@@ -83,10 +96,8 @@ inline void readConfig(const std::string& cfgfile, camera_params_t& camera_intri
  *
  * @param cfgfile
  * @param camera_intrinsics
- * @param landmarks
  */
-inline void writeConfig(std::string cfgfile, const camera_params_t& camera_intrinsics,
-                        const landmark_map_t& landmarks) {
+inline void writeCamConfig(const std::string& cfgfile, const camera_params_t& camera_intrinsics) {
     std::ofstream fout(cfgfile);
 
     fout << "CameraIntrinsics:\n";
@@ -94,9 +105,20 @@ inline void writeConfig(std::string cfgfile, const camera_params_t& camera_intri
     fout << " fv: " << camera_intrinsics[(int)INTRINSICS::fv] << "\n";
     fout << " u0: " << camera_intrinsics[(int)INTRINSICS::u0] << "\n";
     fout << " v0: " << camera_intrinsics[(int)INTRINSICS::v0] << "\n";
-    fout << "\n";
-    fout << "Landmarks:\n";
 
+    fout.close();
+}
+
+/**
+ * @brief
+ *
+ * @param cfgfile
+ * @param landmarks
+ */
+inline void writeMapConfig(const std::string& cfgfile, const landmark_map_t& landmarks) {
+    std::ofstream fout(cfgfile);
+
+    fout << "Landmarks:\n";
     for (auto& entry : landmarks) {
         fout << " - {";
         fout << " HexID: "

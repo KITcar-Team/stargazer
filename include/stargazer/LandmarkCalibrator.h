@@ -37,10 +37,11 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param cfgfile Path to map file with camera intrinsics and landmark poses.
+     * @param cam_cfgfile Path to file with camera intrinsics.
+     * @param map_cfgfile Path to file with landmark poses.
      * @remark The config file has to be generated with ::writeConfig!
      */
-    LandmarkCalibrator(std::string cfgfile);
+    LandmarkCalibrator(const std::string& cam_cfgfile, const std::string& map_cfgfile);
 
     /**
      * @brief Adds all residual blocks to the problem. For every marker of every seen landmark at

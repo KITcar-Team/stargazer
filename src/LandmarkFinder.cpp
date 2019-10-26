@@ -40,9 +40,8 @@ LandmarkFinder::LandmarkFinder(std::string cfgfile) {
     maxPointsPerLandmark = 9;
 
     /// Read in Landmark ids
-    camera_params_t dummy;
     landmark_map_t landmarks;
-    readConfig(cfgfile, dummy, landmarks);
+    readMapConfig(cfgfile, landmarks);
     for (auto& el : landmarks)
         valid_ids_.push_back(el.first);
 }
