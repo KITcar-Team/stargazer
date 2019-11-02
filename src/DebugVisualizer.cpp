@@ -42,8 +42,9 @@ void DebugVisualizer::ShowImage(cv::Mat& img, std::string name) {
 cv::Mat DebugVisualizer::ShowPoints(const cv::Mat& img, const std::vector<cv::Point> points) {
     cv::Mat temp = img.clone();
     prepareImg(temp);
-    for (auto& point : points)
-        circle(temp, point, 1, FZI_GREEN, 2);
+    for (auto& point : points) {
+        cv::drawMarker(temp, point, FZI_GREEN, cv::MARKER_CROSS, 8, 1);
+    }
     ShowImage(temp, "Points");
     return temp;
 }
