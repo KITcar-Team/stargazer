@@ -22,6 +22,10 @@
 
 using namespace stargazer;
 
+const cv::Scalar DebugVisualizer::FZI_BLUE(163, 101, 0);
+const cv::Scalar DebugVisualizer::FZI_GREEN(73, 119, 0);
+const cv::Scalar DebugVisualizer::FZI_RED(39, 157, 236);
+
 void DebugVisualizer::prepareImg(cv::Mat& img) {
     if (img.type() == CV_8UC1) {
         // input image is grayscale
@@ -39,7 +43,7 @@ cv::Mat DebugVisualizer::ShowPoints(const cv::Mat& img, const std::vector<cv::Po
     cv::Mat temp = img.clone();
     prepareImg(temp);
     for (auto& point : points)
-        circle(temp, point, 1, cv::Scalar(73, 119, 0), 2); // FZI Green
+        circle(temp, point, 1, FZI_GREEN, 2);
     ShowImage(temp, "Points");
     return temp;
 }
@@ -52,7 +56,7 @@ cv::Mat DebugVisualizer::ShowClusters(const cv::Mat& img,
         cv::Point median(0, 0);
         for (auto& point : group) {
             median += point;
-            circle(temp, point, 1, cv::Scalar(73, 119, 0), 2); // FZI Green
+            circle(temp, point, 1, FZI_GREEN, 2);
         }
         median *= 1.0 / group.size();
         double variance = 0.0;
@@ -62,7 +66,7 @@ cv::Mat DebugVisualizer::ShowClusters(const cv::Mat& img,
         variance /= (group.size());
         int radius = static_cast<int>(2 * sqrt(variance));
 
-        circle(temp, median, radius, cv::Scalar(163, 101, 0), 2); // FZI Blue
+        circle(temp, median, radius, FZI_BLUE, 2);
     }
     ShowImage(temp, "Clusters");
     return temp;
@@ -72,16 +76,16 @@ void DebugVisualizer::DrawLandmarks(cv::Mat& img, const std::vector<ImgLandmark>
 
     for (auto& lm : landmarks) {
         for (auto& imgPoint : lm.voCorners) {
-            circle(img, imgPoint, 1, cv::Scalar(73, 119, 0), 2); // FZI Green
+            circle(img, imgPoint, 1, FZI_GREEN, 2);
         }
         for (auto& imgPoint : lm.voIDPoints) {
-            circle(img, imgPoint, 1, cv::Scalar(73, 119, 0), 2); // FZI Green
+            circle(img, imgPoint, 1, FZI_GREEN, 2);
         }
         cv::Point median{(lm.voCorners[2].x + lm.voCorners[0].x) / 2,
                          (lm.voCorners[2].y + lm.voCorners[0].y) / 2};
         double radius = sqrt(pow(lm.voCorners[2].x - lm.voCorners[0].x, 2) +
                              pow(lm.voCorners[2].y - lm.voCorners[0].y, 2));
-        circle(img, median, radius, cv::Scalar(163, 101, 0), 2); // FZI Blue
+        circle(img, median, radius, FZI_BLUE, 2);
 
         std::string text = "ID: ";
         text += std::to_string(lm.nID);
@@ -117,7 +121,7 @@ void DebugVisualizer::DrawLandmarks(cv::Mat& img,
             imgPoint.y = static_cast<int>(y);
 
             /// Corner Points
-            circle(img, imgPoint, 4, cv::Scalar(39, 157, 236), 2); // FZI Red
+            circle(img, imgPoint, 4, FZI_RED, 2);
         }
 
         std::string text = "ID: ";

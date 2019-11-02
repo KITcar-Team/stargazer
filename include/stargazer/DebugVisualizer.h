@@ -112,6 +112,7 @@ public:
                        const pose_t& ego_pose);
 
 private:
+    static const cv::Scalar FZI_BLUE, FZI_GREEN, FZI_RED;
     int m_wait_time{1};                  /**< Time to wait when displaying image */
     int m_window_mode{CV_WINDOW_NORMAL}; /**< cvWindowProperty */
     cv::Mat baseImg;                     /**< dummy image */
