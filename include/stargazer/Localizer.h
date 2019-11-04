@@ -46,7 +46,7 @@ public:
      */
     Localizer(const std::string& cam_cfgfile, const std::string& map_cfgfile) {
         readCamConfig(cam_cfgfile, camera_intrinsics);
-        readMapConfig(cam_cfgfile, landmarks);
+        readMapConfig(map_cfgfile, landmarks);
     };
 
     /**
