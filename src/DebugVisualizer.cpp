@@ -30,7 +30,6 @@ void DebugVisualizer::prepareImg(cv::Mat& img) {
     if (img.type() == CV_8UC1) {
         // input image is grayscale
         cvtColor(img, img, CV_GRAY2RGB);
-    } else {
     }
 }
 void DebugVisualizer::ShowImage(cv::Mat& img, std::string name) {
