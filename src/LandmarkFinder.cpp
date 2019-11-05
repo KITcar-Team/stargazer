@@ -18,6 +18,7 @@
 
 #include "LandmarkFinder.h"
 #include <algorithm>
+#include <limits>
 #include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -190,7 +191,7 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
 
     float fw1 = 0.6, fw2 = 30.0, fw3 = 3.0; // Weight factors for score function
     float fp = 1.05;                        // safety_factor_for_length_comparison
-    float best_score = -10000;              // Score for best combination of points
+    float best_score = std::numeric_limits<float>::min(); // Score for best combination of points
 
     /*  Numbering of corners and coordinate frame FOR THIS FUNCTION ONLY // TODO use normal numbering
      *       ---> y
