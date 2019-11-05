@@ -62,6 +62,7 @@ public:
 
     cv::Mat grayImage_;                      /**< Keeps a copy of the grayvalue image */
     cv::Mat filteredImage_;                  /**< Keeps a copy of the filtered image */
+    cv::Mat binaryImage_;                    /**< Keeps a copy of the binary image */
     std::vector<cv::Point> clusteredPixels_; /**< Keeps a copy of pixel clusters found */
     std::vector<Cluster> clusteredPoints_;   /**< Keeps a copy of point clusters found*/
 
