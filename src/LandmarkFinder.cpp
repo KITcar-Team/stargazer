@@ -17,6 +17,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "LandmarkFinder.h"
+#include <algorithm>
+#include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
 
 using namespace std;
@@ -128,18 +130,12 @@ std::vector<cv::Point> LandmarkFinder::FindPoints(cv::Mat& img_in) {
     FindClusters(pixels, clusteredPixels, maxRadiusForPixelCluster, minPixelForCluster, maxPixelForCluster);
 
     /// compute mean of each pixel cluster and put it into output vector
-    /// todo: this can be done more efficiently
+    /// todo: this can be done more efficiently (done?)
     std::vector<cv::Point> points;
     points.reserve(clusteredPixels.size());
-    for (auto& cluster : clusteredPixels) {
-        cv::Point thisPoint = cv::Point(0, 0);
-        for (auto& pixel : cluster) { /// go thru all points in this cluster
-            thisPoint += pixel;
-        }
-        thisPoint *= 1.0 / cluster.size();
-        points.push_back(thisPoint);
-    }
-
+    std::transform(clusteredPixels.begin(), clusteredPixels.end(), std::back_inserter(points), [](Cluster c) {
+        return std::accumulate(c.begin(), c.end(), cv::Point(0, 0)) * (1. / c.size());
+    });
     return points;
 }
 
