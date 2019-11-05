@@ -102,14 +102,15 @@ void CeresLocalizer::AddResidualBlocks(std::vector<ImgLandmark> img_landmarks) {
         }
     }
     if (!is_initialized) {
-        std::vector<int> constant_parameters = {{(int)POSE::Z}};
+        std::vector<int> constant_parameters = {};
         if (estimate_2d_pose) {
+            constant_parameters.push_back((int)POSE::Z);
             constant_parameters.push_back((int)POSE::Rx);
             constant_parameters.push_back((int)POSE::Ry);
+            problem.SetParameterization(ego_pose.data(),
+                                        new ceres::SubsetParameterization((int)POSE::N_PARAMS, constant_parameters));
+            ego_pose[(int)POSE::Z] = 0.0;
         }
-        problem.SetParameterization(ego_pose.data(),
-                                    new ceres::SubsetParameterization((int)POSE::N_PARAMS, constant_parameters));
-        ego_pose[(int)POSE::Z] = 0.0;
         is_initialized = true;
     }
     SetCameraParamsConstant();
