@@ -17,8 +17,9 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 #include "DebugVisualizer.h"
-#include "CoordinateTransformations.h"
 #include <opencv2/imgproc.hpp>
+#include <opencv2/viz/types.hpp>
+#include "CoordinateTransformations.h"
 
 using namespace stargazer;
 
@@ -81,10 +82,8 @@ void DebugVisualizer::DrawLandmarks(cv::Mat& img, const std::vector<ImgLandmark>
         for (auto& imgPoint : lm.voIDPoints) {
             circle(img, imgPoint, 1, FZI_GREEN, 2);
         }
-        cv::Point median{(lm.voCorners[2].x + lm.voCorners[0].x) / 2,
-                         (lm.voCorners[2].y + lm.voCorners[0].y) / 2};
-        double radius = sqrt(pow(lm.voCorners[2].x - lm.voCorners[0].x, 2) +
-                             pow(lm.voCorners[2].y - lm.voCorners[0].y, 2));
+        cv::Point median = (lm.voCorners[0] + lm.voCorners[2]) * 0.5;
+        double radius = cv::norm(median - lm.voCorners[2]) * 1.2; // Slightly bigger than smallest enclosing circle
         circle(img, median, radius, FZI_BLUE, 2);
 
         std::string text = "ID: ";
@@ -92,7 +91,7 @@ void DebugVisualizer::DrawLandmarks(cv::Mat& img, const std::vector<ImgLandmark>
         cv::Point imgPoint = lm.voCorners.front();
         imgPoint.x += 25;
         imgPoint.y += 25;
-        putText(img, text, imgPoint, 2, 0.4, cvScalar(0, 0, 0));
+        putText(img, text, imgPoint, 2, 0.4, cv::viz::Color::black());
     }
 }
 
@@ -128,6 +127,6 @@ void DebugVisualizer::DrawLandmarks(cv::Mat& img,
         text += std::to_string(lm.second.id);
         imgPoint.x += 25;
         imgPoint.y += 25;
-        putText(img, text, imgPoint, 2, 0.4, cvScalar(0, 0, 0));
+        putText(img, text, imgPoint, 2, 0.4, cv::viz::Color::black());
     }
 }
