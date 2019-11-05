@@ -87,18 +87,21 @@ void CeresLocalizer::AddResidualBlocks(std::vector<ImgLandmark> img_landmarks) {
         for (size_t k = 0; k < landmarks[img_lm.nID].points.size(); k++) {
             ceres::CostFunction* cost_function;
             if (k < 3) {
-                cost_function = WorldToImageReprojectionFunctor::Create(
-                    img_lm.voCorners[k].x, img_lm.voCorners[k].y, landmarks[img_lm.nID].points[k][(int)POINT::X],
-                    landmarks[img_lm.nID].points[k][(int)POINT::Y], landmarks[img_lm.nID].points[k][(int)POINT::Z]);
+                cost_function = WorldToImageReprojectionFunctor::Create(img_lm.voCorners[k].x,
+                                                                        img_lm.voCorners[k].y,
+                                                                        landmarks[img_lm.nID].points[k][(int)POINT::X],
+                                                                        landmarks[img_lm.nID].points[k][(int)POINT::Y],
+                                                                        landmarks[img_lm.nID].points[k][(int)POINT::Z]);
             } else {
-                cost_function = WorldToImageReprojectionFunctor::Create(
-                    img_lm.voIDPoints[k - 3].x, img_lm.voIDPoints[k - 3].y,
-                    landmarks[img_lm.nID].points[k][(int)POINT::X], landmarks[img_lm.nID].points[k][(int)POINT::Y],
-                    landmarks[img_lm.nID].points[k][(int)POINT::Z]);
+                cost_function = WorldToImageReprojectionFunctor::Create(img_lm.voIDPoints[k - 3].x,
+                                                                        img_lm.voIDPoints[k - 3].y,
+                                                                        landmarks[img_lm.nID].points[k][(int)POINT::X],
+                                                                        landmarks[img_lm.nID].points[k][(int)POINT::Y],
+                                                                        landmarks[img_lm.nID].points[k][(int)POINT::Z]);
             }
             // CauchyLoss(9): a pixel-error of 3 is still considered as inlayer
-            problem.AddResidualBlock(cost_function, new ceres::CauchyLoss(9), ego_pose.data(),
-                                     camera_intrinsics.data());
+            problem.AddResidualBlock(
+                cost_function, new ceres::CauchyLoss(9), ego_pose.data(), camera_intrinsics.data());
         }
     }
     if (!is_initialized) {
