@@ -83,7 +83,7 @@ void DebugVisualizer::DrawLandmarks(cv::Mat& img, const std::vector<ImgLandmark>
             circle(img, imgPoint, 1, FZI_GREEN, 2);
         }
         cv::Point median = (lm.voCorners[0] + lm.voCorners[2]) * 0.5;
-        double radius = cv::norm(median - lm.voCorners[2]) * 1.2; // Slightly bigger than smallest enclosing circle
+        double radius = cv::norm(median - lm.voCorners[2]) * 1.5; // Slightly bigger than smallest enclosing circle
         circle(img, median, radius, FZI_BLUE, 2);
 
         std::string text = "ID: ";
