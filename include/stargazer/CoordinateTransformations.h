@@ -47,7 +47,7 @@ void transformLandMarkToWorld(const T& x_landmark, const T& y_landmark, const T*
     angleAxisLM[1] = landmark_pose[(int)POSE::Ry];
     angleAxisLM[2] = landmark_pose[(int)POSE::Rz];
 
-    ceres::AngleAxisRotatePoint(&angleAxisLM[0], &point_landmark[0], &point_world[0]);
+    ceres::AngleAxisRotatePoint(angleAxisLM, point_landmark, point_world);
 
     // lm_pose[0,1,2] are the translation.
     point_world[0] += landmark_pose[(int)POSE::X];
@@ -89,7 +89,7 @@ void transformWorldToImg(const T& x_world, const T& y_world, const T& z_world, c
     angleAxisCam[0] = -camera_pose[(int)POSE::Rx];
     angleAxisCam[1] = -camera_pose[(int)POSE::Ry];
     angleAxisCam[2] = -camera_pose[(int)POSE::Rz];
-    ceres::AngleAxisRotatePoint(&angleAxisCam[0], &p_camera[0], &p_camera[0]);
+    ceres::AngleAxisRotatePoint(angleAxisCam, p_camera, p_camera);
 
     // Transform point to image coordinates
     T p_image[3];
