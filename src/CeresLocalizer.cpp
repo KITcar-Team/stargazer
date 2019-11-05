@@ -39,7 +39,7 @@ CeresLocalizer::CeresLocalizer(const std::string& cam_cfgfile, const std::string
     is_initialized = false;
 }
 
-void CeresLocalizer::UpdatePose(std::vector<ImgLandmark>& img_landmarks, float dt) {
+void CeresLocalizer::UpdatePose(std::vector<ImgLandmark>& img_landmarks, float /*dt*/) {
     if (img_landmarks.empty()) {
         std::cout << "Localizer received empty landmarks vector" << std::endl;
         return;
