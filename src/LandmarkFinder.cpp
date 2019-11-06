@@ -195,7 +195,7 @@ void LandmarkFinder::FindClusters(const std::vector<cv::Point>& points_in, std::
 ///--------------------------------------------------------------------------------------///
 bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector<cv::Point>& corner_points) {
 
-    float best_score = std::numeric_limits<float>::min(); // Score for best combination of points
+    float best_score = std::numeric_limits<float>::lowest(); // Score for best combination of points
 
     /*  Numbering of corners and coordinate frame FOR THIS FUNCTION ONLY // TODO use normal numbering
      *       ---> y
