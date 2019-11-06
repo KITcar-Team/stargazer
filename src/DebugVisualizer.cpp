@@ -73,6 +73,26 @@ cv::Mat DebugVisualizer::ShowClusters(const cv::Mat& img,
     return temp;
 }
 
+cv::Mat DebugVisualizer::ShowLandmarkHypotheses(cv::Mat& img, const std::vector<ImgLandmark>& landmarks) {
+    cv::Mat temp = img.clone();
+    prepareImg(temp);
+    for (auto& lm : landmarks) {
+        for (auto& imgPoint : lm.voCorners) {
+            circle(temp, imgPoint, 3, cv::viz::Color::red(), 2);
+        }
+        for (auto& imgPoint : lm.voIDPoints) {
+            circle(temp, imgPoint, 1, FZI_GREEN, 2);
+        }
+        cv::Point median = (lm.voCorners[0] + lm.voCorners[2]) * 0.5;
+        double radius = cv::norm(median - lm.voCorners[2]) * 1.5; // Slightly bigger than smallest enclosing circle
+        circle(temp, median, radius, FZI_BLUE, 2);
+
+        //Landmarks have no ID yet
+    }
+    ShowImage(temp, "Landmark Hypotheses");
+    return temp;
+}
+
 void DebugVisualizer::DrawLandmarks(cv::Mat& img, const std::vector<ImgLandmark>& landmarks) {
 
     for (auto& lm : landmarks) {

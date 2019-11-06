@@ -308,7 +308,7 @@ std::vector<ImgLandmark> LandmarkFinder::FindLandmarks(const std::vector<Cluster
         /// add this landmark to the landmark vector
         OutputLandmarks.push_back(newLandmark);
     }
-
+    landmarkHypotheses_ = OutputLandmarks;
     GetIDs(OutputLandmarks);
 
     /// done and return landmarks

@@ -90,6 +90,16 @@ public:
      * @return cv::Mat A copy of the input image with the drawn points
      */
     cv::Mat ShowClusters(const cv::Mat& img, const std::vector<std::vector<cv::Point>> points);
+
+    /**
+     * @brief Draws the image landmark hypotheses into the input image
+     *
+     * @param img   Input image, gets modified!
+     * @param landmarks Landmark hypotheses to be drawn
+     * @return cv::Mat A copy of the input image with the drawn landmark hypotheses
+     */
+    cv::Mat ShowLandmarkHypotheses(cv::Mat& img, const std::vector<ImgLandmark>& landmarks);
+
     /**
      * @brief Draws the observed image landmarks into the input image
      *
