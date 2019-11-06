@@ -77,6 +77,10 @@ public:
     uint16_t minPointsPerLandmark;    /**< Minimum count of marker points per landmark (0)*/
     uint16_t maxPointsPerLandmark;    /**< Maximum count of marker points per landmark (depends on grid used)*/
     std::vector<uint16_t> valid_ids_; /**< Vector of valid IDs, read from map*/
+    float fwLengthTriangle;           /**< weigth factor for the circumference of the triangle */
+    float fwProjectedSecantLength;    /**< weigth factor for the dot product of the secants */
+    float fwSecantsLengthDiff;        /**< weigth factor for the length difference of the secants */
+
 
 private:
     /**

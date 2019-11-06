@@ -42,6 +42,12 @@ LandmarkFinder::LandmarkFinder(std::string cfgfile) {
     minPointsPerLandmark = 5;
     maxPointsPerLandmark = 9;
 
+    // Weight factors for corner detection
+    fwLengthTriangle = 0.6;
+    fwProjectedSecantLength = 30.0;
+    fwSecantsLengthDiff = 3.0;
+    // const float fp = 1.05; // safety_factor_for_length_comparison
+
     /// Read in Landmark ids
     landmark_map_t landmarks;
     readMapConfig(cfgfile, landmarks);
@@ -188,11 +194,7 @@ void LandmarkFinder::FindClusters(const std::vector<cv::Point>& points_in, std::
 /// -> find three points which maximize a certain score for corner points
 ///--------------------------------------------------------------------------------------///
 bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector<cv::Point>& corner_points) {
-     // Weight factors for score function
-    const float fwLengthTriangle = 0.6;
-    const float fwProjectedSecantLength = 30.0;
-    const float fwSecantsLengthDiff = 3.0;
-    const float fp = 1.05; // safety_factor_for_length_comparison
+
     float best_score = std::numeric_limits<float>::min(); // Score for best combination of points
 
     /*  Numbering of corners and coordinate frame FOR THIS FUNCTION ONLY // TODO use normal numbering
