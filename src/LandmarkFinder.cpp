@@ -46,7 +46,7 @@ LandmarkFinder::LandmarkFinder(std::string cfgfile) {
     fwLengthTriangle = 0.6;
     fwProjectedSecantLength = 30.0;
     fwSecantsLengthDiff = 3.0;
-    // const float fp = 1.05; // safety_factor_for_length_comparison
+    hypotenuseTolerance = 0.8;
 
     /// Read in Landmark ids
     landmark_map_t landmarks;
@@ -232,7 +232,7 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
                 float nH = cv::norm(h);
 
                 /// Check if vH12 is reasonable hypotenuse
-                if (normS1 > fp*nH || normS2 > fp*nH) {
+                if (normS1 > hypotenuseTolerance * nH || normS2 > hypotenuseTolerance * nH) {
                     // Skip unprobable hypotenuse
                     continue;
                 }
