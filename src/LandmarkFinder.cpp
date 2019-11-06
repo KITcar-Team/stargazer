@@ -185,12 +185,14 @@ void LandmarkFinder::FindClusters(const std::vector<cv::Point>& points_in, std::
 
 ///--------------------------------------------------------------------------------------///
 /// FindCorners identifies the three corner points and sorts them into output vector
-/// -> find three points whos sum of length is maximum and two edges are perpendicular
+/// -> find three points which maximize a certain score for corner points
 ///--------------------------------------------------------------------------------------///
 bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector<cv::Point>& corner_points) {
-
-    float fw1 = 0.6, fw2 = 30.0, fw3 = 3.0; // Weight factors for score function
-    float fp = 1.05;                        // safety_factor_for_length_comparison
+     // Weight factors for score function
+    const float fwLengthTriangle = 0.6;
+    const float fwProjectedSecantLength = 30.0;
+    const float fwSecantsLengthDiff = 3.0;
+    const float fp = 1.05; // safety_factor_for_length_comparison
     float best_score = std::numeric_limits<float>::min(); // Score for best combination of points
 
     /*  Numbering of corners and coordinate frame FOR THIS FUNCTION ONLY // TODO use normal numbering
@@ -203,51 +205,62 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
 
     /// Try all combinations of three points
     bool corners_found = false;
-    cv::Point *cornerOne, *cornerTwo, *cornerThree;
-    for (size_t i = 0; i < point_list.size(); i++) {
-        cv::Point& firstPoint = point_list[i];
-        for (size_t j = i + 1; j < point_list.size(); j++) {
-            cv::Point& secondPoint = point_list[j];
-            cv::Point v12 = firstPoint - secondPoint;
-            for (size_t k = j + 1; k < point_list.size(); k++) {
-                cv::Point& thirdPoint = point_list[k];
-                cv::Point v31 = firstPoint - thirdPoint;
-                cv::Point v32 = secondPoint - thirdPoint;
 
-                /// Since we test every combination only once, make sure the lengths are correct:
-                // norm(v12) > norm(v31) >= (v32)
-                if ((cv::norm(v31) > fp * cv::norm(v32)) && (cv::norm(v31) > fp * cv::norm(v12))) {
-                    v12 = v31; // v12 should be longest -> hypotenuse
-                    v31 = firstPoint - secondPoint;
-                    v32 = v32;
-                } else if ((cv::norm(v32) > fp * cv::norm(v31)) && (cv::norm(v32) > fp * cv::norm(v12))) {
-                    v12 = v32;
-                    v32 = v31;
-                    v31 = firstPoint - secondPoint;
+    cv::Point pA, pB, pC; // corner hypothesis (unordered)
+    cv::Point pS, pH1, pH2; // corner hypothesis where S ist not part of hypotenuse
+    cv::Point cornerS, cornerH1, cornerH2; // most probable corner hypothesis
+    cv::Point corner1, corner2, corner3;
+    for (size_t i = 0; i < point_list.size(); i++) {
+        pA = point_list[i];
+        for (size_t j = i + 1; j < point_list.size(); j++) {
+            pB = point_list[j];
+            cv::Point vAB = pA - pB;
+            for (size_t k = j + 1; k < point_list.size(); k++) {
+                pC = point_list[k];
+                cv::Point vAC = pA - pC;
+                cv::Point vBC = pB - pC;
+
+                /// Check if vAB is hypotenuse
+                if ((cv::norm(vAB) > cv::norm(vAC)) && (cv::norm(vAB) > cv::norm(vBC))) {
+                    //vAB is hypotenuse
+                    pS = pC;
+                    pH1 = pA;
+                    pH2 = pB;
+                } else {
+                    if (cv::norm(vAC) > cv::norm(vBC)) {
+                        // vAC is hypotenuse
+                        pS = pB;
+                        pH1 = pA;
+                        pH2 = pC;
+                    } else {
+                        // vBC is hypotenuse
+                        pS = pA;
+                        pH1 = pB;
+                        pH2 = pC;
+                    }
                 }
 
-                float dist12 = cv::norm(v12);
-                float dist31 = cv::norm(v31);
-                float dist32 = cv::norm(v32);
-                float sumOfLength = dist12 + dist31 + dist32;
+                float lengthTriangle = cv::norm(vAB) + cv::norm(vBC) + cv::norm(vAC);
+                float projectedSecantLength, secantsLengthDiff;
+                {
+                    cv::Point s1 = pS - pH1;
+                    cv::Point s2 = pS - pH2;
+                    // Project s1 onto s2 -> resulting length should be close to zero
+                    // TODO use cross product?
+                    projectedSecantLength = std::abs(s1.dot(s2)) / (cv::norm(s1) * cv::norm(s2));
+                    secantsLengthDiff = fabs(cv::norm(s1) - cv::norm(s2));
+                }
 
-                // Project v32 onto v31 -> resulting length should be close to zero
-                // TODO use cross product?
-                float projectedLength = std::abs((v32.x * v31.x + v32.y * v31.y)) / dist31 / dist32;
-                float diffInLength = fabs(dist31 - dist32);
-
-                // We are trying to maximise sumOfLength while minimizing projectedLength and diffInLength
-                if (best_score < (fw1 * sumOfLength - (fw2 * projectedLength + fw3 * diffInLength))) {
-                    if (100.0 > dist12 && 80.0 > dist31 && 80.0 > dist32) {
-                        if (fabs(dist31 - dist32) < 0.5 * dist12) {
-                            /// remember their addresses and distance
-                            corners_found = true;
-                            cornerOne = &firstPoint;
-                            cornerTwo = &secondPoint;
-                            cornerThree = &thirdPoint;
-                            best_score = fw1 * sumOfLength - fw2 * projectedLength - fw3 * diffInLength;
-                        }
-                    }
+                float score = fwLengthTriangle * lengthTriangle -
+                              fwProjectedSecantLength * projectedSecantLength -
+                              fwSecantsLengthDiff * secantsLengthDiff;
+                if (best_score < score) {
+                    /// remember their addresses and distance
+                    corners_found = true;
+                    cornerS = pS;
+                    cornerH1 = pH1;
+                    cornerH2 = pH2;
+                    best_score = score;
                 }
             }
         }
@@ -256,31 +269,29 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
         return false;
     }
 
-    /// The three distances have to be updated for calculations in the next steps
-    cv::Point v12 = *cornerTwo - *cornerOne;
-    cv::Point v31 = *cornerOne - *cornerThree;
-    cv::Point v32 = *cornerTwo - *cornerThree;
-
-    /// Compare the distances and get the diagonal of the landmark
-    /// note the reversed order: it's 1-3-2, because the corner 3 is the one
-    /// between 1 and 2 this helps for post-processing
-    if ((cv::norm(v12) > fp * cv::norm(v31)) && (cv::norm(v12) > fp * cv::norm(v32))) {
-        ;
-    } else if ((cv::norm(v31) > fp * cv::norm(v32)) && (cv::norm(v31) > fp * cv::norm(v12))) {
-        std::swap(cornerTwo, cornerThree);
+    // Check whether H1 is corner 1 or 2
+    cv::Point vSH1 = cornerH1 - cornerS;
+    cv::Point vSH2 = cornerH2 - cornerS;
+    corner3 = cornerS;
+    if(0. < vSH1.cross(vSH2)) {
+        corner1 = cornerH1;
+        corner2 = cornerH2;
     } else {
-        std::swap(cornerOne, cornerThree);
+        corner1 = cornerH2;
+        corner2 = cornerH1;
     }
 
-    /// Store in output container
-    corner_points.push_back(*cornerOne);
-    corner_points.push_back(*cornerThree);
-    corner_points.push_back(*cornerTwo);
+    /// Move corner points from point list to empty corner point list
+
+    /// Store in output container (order is important)
+    corner_points.push_back(corner1);
+    corner_points.push_back(corner3);
+    corner_points.push_back(corner2);
 
     /// Remove from input list
-    point_list.erase(std::remove(point_list.begin(), point_list.end(), *cornerOne), point_list.end());
-    point_list.erase(std::remove(point_list.begin(), point_list.end(), *cornerTwo), point_list.end());
-    point_list.erase(std::remove(point_list.begin(), point_list.end(), *cornerThree), point_list.end());
+    point_list.erase(std::remove(point_list.begin(), point_list.end(), corner1), point_list.end());
+    point_list.erase(std::remove(point_list.begin(), point_list.end(), corner2), point_list.end());
+    point_list.erase(std::remove(point_list.begin(), point_list.end(), corner3), point_list.end());
 
     return true;
 }
@@ -320,27 +331,16 @@ std::vector<ImgLandmark> LandmarkFinder::FindLandmarks(const std::vector<Cluster
 ///
 ///--------------------------------------------------------------------------------------///
 bool LandmarkFinder::CalculateIdForward(ImgLandmark& landmark, std::vector<uint16_t>& valid_ids) {
-    // TOD clean up this function
+    // TODO clean up this function
     /// first of all: get the three corner points
     const cv::Point* oCornerOne = &landmark.voCorners.at(0);
     const cv::Point* oCornerTwo = &landmark.voCorners.at(1);
     const cv::Point* oCornerThree = &landmark.voCorners.at(2);
 
-    // TODO move these checks into FindCorners function
-    /// second: get the x- and y-axis of the landmark
     cv::Point oTwoOne = *oCornerOne - *oCornerTwo;
     cv::Point oTwoThree = *oCornerThree - *oCornerTwo;
 
-    /// third: make sure, they are in the right order.
-    /// we do this by checking if the cross product is positive
-    if (0 > oTwoOne.cross(oTwoThree)) {
-        std::swap(oCornerOne, oCornerThree);
-        std::swap(oTwoOne, oTwoThree);
-        std::swap(landmark.voCorners.at(0), landmark.voCorners.at(2));
-    }
-
     /// at this point we have a right hand system in image coordinates
-
     /// now, we find the affine transformation which maps the landmark from
     /// image coordinate in a landmark-related coordinate frame
     /// with the corners defined as (0,0), (1,0) and (0,1)
