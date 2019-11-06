@@ -206,49 +206,44 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
     /// Try all combinations of three points
     bool corners_found = false;
 
-    cv::Point pA, pB, pC; // corner hypothesis (unordered)
     cv::Point pS, pH1, pH2; // corner hypothesis where S ist not part of hypotenuse
-    cv::Point cornerS, cornerH1, cornerH2; // most probable corner hypothesis
-    cv::Point corner1, corner2, corner3;
+    cv::Point cornerS, cornerH1, cornerH2; // current most probable corner hypothesis
+    cv::Point corner1, corner2, corner3; // most probable corner hypothesis (as right hand system)
     for (size_t i = 0; i < point_list.size(); i++) {
-        pA = point_list[i];
-        for (size_t j = i + 1; j < point_list.size(); j++) {
-            pB = point_list[j];
-            cv::Point vAB = pA - pB;
-            for (size_t k = j + 1; k < point_list.size(); k++) {
-                pC = point_list[k];
-                cv::Point vAC = pA - pC;
-                cv::Point vBC = pB - pC;
+        pS = point_list[i];
+        for (size_t j = 0; j < point_list.size(); j++) {
+            pH1 = point_list[j];
+            for (size_t k = 0; k < point_list.size(); k++) {
+                pH2 = point_list[k];
 
-                /// Check if vAB is hypotenuse
-                if ((cv::norm(vAB) > cv::norm(vAC)) && (cv::norm(vAB) > cv::norm(vBC))) {
-                    //vAB is hypotenuse
-                    pS = pC;
-                    pH1 = pA;
-                    pH2 = pB;
-                } else {
-                    if (cv::norm(vAC) > cv::norm(vBC)) {
-                        // vAC is hypotenuse
-                        pS = pB;
-                        pH1 = pA;
-                        pH2 = pC;
-                    } else {
-                        // vBC is hypotenuse
-                        pS = pA;
-                        pH1 = pB;
-                        pH2 = pC;
-                    }
+                if (i==j || j==k || k==i) {
+                    // Skip double assignments
+                    continue;
                 }
 
-                float lengthTriangle = cv::norm(vAB) + cv::norm(vBC) + cv::norm(vAC);
+                cv::Point s1 = pS - pH1;
+                cv::Point s2 = pS - pH2;
+                cv::Point h = pH2 - pH1;
+
+                float normS1 = cv::norm(s1);
+                float normS2 = cv::norm(s2);
+                float nH = cv::norm(h);
+
+                /// Check if vH12 is reasonable hypotenuse
+                if (normS1 > fp*nH || normS2 > fp*nH) {
+                    // Skip unprobable hypotenuse
+                    continue;
+                }
+
+                float lengthTriangle = normS1 + normS2 + nH;
                 float projectedSecantLength, secantsLengthDiff;
                 {
                     cv::Point s1 = pS - pH1;
                     cv::Point s2 = pS - pH2;
                     // Project s1 onto s2 -> resulting length should be close to zero
                     // TODO use cross product?
-                    projectedSecantLength = std::abs(s1.dot(s2)) / (cv::norm(s1) * cv::norm(s2));
-                    secantsLengthDiff = fabs(cv::norm(s1) - cv::norm(s2));
+                    projectedSecantLength = std::abs(s1.dot(s2)) / (normS1 * normS2);
+                    secantsLengthDiff = fabs(normS1 - normS2);
                 }
 
                 float score = fwLengthTriangle * lengthTriangle -
