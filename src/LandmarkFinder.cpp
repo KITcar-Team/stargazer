@@ -215,10 +215,10 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
         pS = point_list[i];
         for (size_t j = 0; j < point_list.size(); j++) {
             pH1 = point_list[j];
-            for (size_t k = 0; k < point_list.size(); k++) {
+            for (size_t k = j+1; k < point_list.size(); k++) {
                 pH2 = point_list[k];
 
-                if (i==j || j==k || k==i) {
+                if (i==j || i==k) {
                     // Skip double assignments
                     continue;
                 }
