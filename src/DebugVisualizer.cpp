@@ -77,9 +77,14 @@ cv::Mat DebugVisualizer::ShowLandmarkHypotheses(cv::Mat& img, const std::vector<
     cv::Mat temp = img.clone();
     prepareImg(temp);
     for (auto& lm : landmarks) {
-        for (auto& imgPoint : lm.voCorners) {
-            circle(temp, imgPoint, 3, cv::viz::Color::red(), 2);
-        }
+        // Secants
+        line(temp, lm.voCorners[1], lm.voCorners[0], cv::viz::Color::red());
+        line(temp, lm.voCorners[1], lm.voCorners[2], cv::viz::Color::red());
+        // Corners
+        cv::drawMarker(temp,lm.voCorners[0], cv::viz::Color::red(), cv::MARKER_CROSS, 8, 2); // leading corner clockwise (if assumption of rhs is valid)
+        circle(temp, lm.voCorners[1], 3, cv::viz::Color::red(), 2); // middle corner
+        circle(temp, lm.voCorners[2], 3, cv::viz::Color::red(), 2); // following corner clockwise
+        // Inner points
         for (auto& imgPoint : lm.voIDPoints) {
             circle(temp, imgPoint, 1, FZI_GREEN, 2);
         }
