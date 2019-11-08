@@ -99,11 +99,12 @@ int LandmarkFinder::DetectLandmarks(const cv::Mat& img, std::vector<ImgLandmark>
     }
     detected_landmarks.clear();
 
-    /// smooth image
-    FilterImage(grayImage_, filteredImage_);
+    // For visualization
+    filteredImage_ = grayImage_.clone();
+    binaryImage_ = grayImage_.clone();
     /// This method finds bright points in image
     /// returns vector of center points of pixel groups
-    clusteredPixels_ = FindPoints(filteredImage_);
+    clusteredPixels_ = FindBlobs(grayImage_);
 
     /// cluster points to groups which could be landmarks
     /// returns a vector of clusters which themselves are vectors of points
