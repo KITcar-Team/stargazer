@@ -68,10 +68,6 @@ public:
     std::vector<Cluster> clusteredPoints_;   /**< Keeps a copy of point clusters found*/
     std::vector<ImgLandmark> landmarkHypotheses_; /**< Keeps a copy of landmark hypotheses*/
 
-    uint8_t threshold; /**< Threshold for grayvalue thresholding 0-254*/
-    uint32_t tight_filter_size;
-    uint32_t wide_filter_size;
-
     cv::SimpleBlobDetector::Params blobParams;
 
     float maxRadiusForCluster;        /**< Maximum radius for clustering marker points to landmarks*/
@@ -91,13 +87,6 @@ private:
      */
     std::vector<cv::Point> FindBlobs(cv::Mat& img_in);
 
-    /**
-     * @brief Applies a difference of gaussian matched filter to the image
-     *
-     * @param img_in    raw image
-     * @param img_out   filtered image
-     */
-    void FilterImage(const cv::Mat& img_in, cv::Mat& img_out);
     /**
      * @brief Finds hypotheses for landmarks by clustering the input points
      *
