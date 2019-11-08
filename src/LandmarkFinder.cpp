@@ -35,9 +35,6 @@ LandmarkFinder::LandmarkFinder(std::string cfgfile) {
     tight_filter_size = 3;
     wide_filter_size = 11;
 
-    maxRadiusForPixelCluster = 3;
-    minPixelForCluster = 1;
-    maxPixelForCluster = 1000;
     maxRadiusForCluster = 40;
     minPointsPerLandmark = 5;
     maxPointsPerLandmark = 9;
@@ -136,33 +133,6 @@ void LandmarkFinder::FilterImage(const cv::Mat& img_in, cv::Mat& img_out) {
     cv::boxFilter(img_in, wide_filtered, -1, cv::Size(wide_filter_size, wide_filter_size), cv::Point(-1, -1), true,
                   cv::BORDER_DEFAULT);
     img_out = tight_filtered - wide_filtered;
-}
-
-///--------------------------------------------------------------------------------------///
-/// FindPoints for pixel groups
-/// threshold pixels and group them
-///--------------------------------------------------------------------------------------///
-std::vector<cv::Point> LandmarkFinder::FindPoints(cv::Mat& img_in) {
-
-    /// thresholding for pixels: put all pixels over a threshold in vector
-    cv::threshold(img_in, binaryImage_, threshold, 255, cv::THRESH_BINARY);
-
-    std::vector<cv::Point> pixels;
-    cv::findNonZero(binaryImage_, pixels);
-
-    /// use this vector to group all pixels
-    /// todo: this can be done more efficiently, e.g. region growing
-    std::vector<Cluster> clusteredPixels;
-    FindClusters(pixels, clusteredPixels, maxRadiusForPixelCluster, minPixelForCluster, maxPixelForCluster);
-
-    /// compute mean of each pixel cluster and put it into output vector
-    /// todo: this can be done more efficiently (done?)
-    std::vector<cv::Point> points;
-    points.reserve(clusteredPixels.size());
-    std::transform(clusteredPixels.begin(), clusteredPixels.end(), std::back_inserter(points), [](Cluster c) {
-        return std::accumulate(c.begin(), c.end(), cv::Point(0, 0)) * (1. / c.size());
-    });
-    return points;
 }
 
 ///--------------------------------------------------------------------------------------///
