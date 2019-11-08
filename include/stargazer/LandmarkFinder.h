@@ -25,6 +25,7 @@
 #include <fstream>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
+#include <opencv2/features2d.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include "iostream"
 #include "math.h"
@@ -73,6 +74,8 @@ public:
     float maxRadiusForPixelCluster;   /**< Maximum radius for clustering pixels to marker points*/
     uint16_t minPixelForCluster;      /**< Minimum count of pixels per marker point*/
     uint16_t maxPixelForCluster;      /**< Maximum count of pixels per marker point*/
+    cv::SimpleBlobDetector::Params blobParams;
+
     float maxRadiusForCluster;        /**< Maximum radius for clustering marker points to landmarks*/
     uint16_t minPointsPerLandmark;    /**< Minimum count of marker points per landmark (0)*/
     uint16_t maxPointsPerLandmark;    /**< Maximum count of marker points per landmark (depends on grid used)*/
@@ -83,6 +86,13 @@ public:
     float hypotenuseTolerance;        /**< tolerance for the length difference of the hypotenuse and the secants */
 
 private:
+    /**
+     * @brief Uses SimpleBlobDetection for point detection
+     *
+     * @param img_in    raw image
+     */
+    std::vector<cv::Point> FindBlobs(cv::Mat& img_in);
+
     /**
      * @brief Applies a difference of gaussian matched filter to the image
      *

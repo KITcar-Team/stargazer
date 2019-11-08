@@ -48,6 +48,25 @@ LandmarkFinder::LandmarkFinder(std::string cfgfile) {
     fwSecantsLengthDiff = 3.0;
     hypotenuseTolerance = 0.8;
 
+    blobParams.filterByArea = false;
+    blobParams.filterByCircularity = false;
+    blobParams.filterByColor = false;
+    blobParams.filterByConvexity = false;
+    blobParams.filterByInertia = false;
+    blobParams.maxArea = std::numeric_limits<float>::max();
+    blobParams.maxCircularity = 1.f;
+    blobParams.maxConvexity = 1.f;
+    blobParams.maxInertiaRatio = 1.f;
+    blobParams.maxThreshold = 255.f;
+    blobParams.minArea = 0.f;
+    blobParams.minCircularity = 0.f;
+    blobParams.minConvexity = 0.f;
+    blobParams.minDistBetweenBlobs = 0.f;
+    blobParams.minInertiaRatio = 0.f;
+    blobParams.minRepeatability = 0;
+    blobParams.minThreshold = 0.f;
+    blobParams.thresholdStep = 50.f;
+
     /// Read in Landmark ids
     landmark_map_t landmarks;
     readMapConfig(cfgfile, landmarks);
@@ -187,6 +206,25 @@ void LandmarkFinder::FindClusters(const std::vector<cv::Point>& points_in, std::
                                               maxPointsThreshold < cluster.size());
                                   }),
                    clusters.end());
+}
+
+std::vector<cv::Point> LandmarkFinder::FindBlobs(cv::Mat& img_in) {
+
+    //cv::Mat img;
+    //bitwise_not (img_in, img);
+
+    // BlobDetector with latest parameters
+    std::vector<cv::KeyPoint> keypoints;
+    cv::Ptr<cv::SimpleBlobDetector> detector = cv::SimpleBlobDetector::create(blobParams);
+    detector->detect(img_in, keypoints);
+
+    // two step conversion
+    std::vector<cv::Point2f> points2f;
+    cv::KeyPoint::convert(keypoints, points2f);
+    std::vector<cv::Point> points;
+    cv::Mat(points2f).convertTo(points, cv::Mat(points).type());
+
+    return points;
 }
 
 ///--------------------------------------------------------------------------------------///
