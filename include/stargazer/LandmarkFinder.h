@@ -67,6 +67,8 @@ public:
     std::vector<Cluster> clusteredPoints_;   /**< Keeps a copy of point clusters found*/
     std::vector<ImgLandmark> landmarkHypotheses_; /**< Keeps a copy of landmark hypotheses*/
 
+    int maxCornerHypotheses; /**< Maximum number of corner hypotheses which are still considered*/
+    float cornerHypothesesCutoff; /**< Defines near-best corner points hypotheses which are still considered further*/
     uint8_t threshold; /**< Threshold for grayvalue thresholding 0-254*/
     uint32_t tight_filter_size;
     uint32_t wide_filter_size;
@@ -109,15 +111,17 @@ private:
     void FindClusters(const std::vector<cv::Point>& points_in, std::vector<Cluster>& clusters,
                       const float radiusThreshold, const unsigned int minPointsThreshold,
                       const unsigned int maxPointsThreshold);
+
     /**
-     * @brief Identifies the three corner points of a landmark and moves them into the second vector. It utilizes a
-     * score function to find the triple.
+     * @brief Finds hypotheses for the three corner points of a landmark and adds them to the landmark vector.
+     * It utilizes a score function to find good triple.
      *
      * @param point_list    input list (found corner points get removed)
      * @param corner_points output list (holds the found corner points)
      * @return bool indicates success
      */
-    bool FindCorners(std::vector<cv::Point>& point_list, std::vector<cv::Point>& corner_points);
+    void FindCorners(const std::vector<cv::Point>& points, std::vector<ImgLandmark>& landmark_hypotheses);
+
     /**
      * @brief Finds valid landmark observations from the input hypotheses
      *
@@ -142,6 +146,7 @@ private:
      * @return bool Success
      */
     bool CalculateIdForward(ImgLandmark& landmark, std::vector<uint16_t>& valid_ids);
+
     /**
      * @brief   Tryies to calculate the landmarks id by looking in the filtered image, whether a bright point can be
      * seen where it is assumed.
