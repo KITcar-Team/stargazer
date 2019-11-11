@@ -37,6 +37,8 @@ LandmarkFinder::LandmarkFinder(std::string cfgfile) {
     maxPointsPerLandmark = 9;
 
     // Weight factors for corner detection
+    cornerHypothesesCutoff = 1.0;
+    maxCornerHypotheses = 10;
     fwLengthTriangle = 0.6;
     fwProjectedSecantLength = 30.0;
     fwSecantsLengthDiff = 3.0;
@@ -178,8 +180,10 @@ std::vector<cv::Point> LandmarkFinder::FindBlobs(cv::Mat& img_in) {
 /// FindCorners identifies the three corner points and sorts them into output vector
 /// -> find three points which maximize a certain score for corner points
 ///--------------------------------------------------------------------------------------///
-bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector<cv::Point>& corner_points) {
+void LandmarkFinder::FindCorners(const std::vector<cv::Point>& point_list, std::vector<ImgLandmark>& hypotheses) {
 
+    typedef std::pair<float, ImgLandmark> LmHypothesis;
+    std::vector<LmHypothesis> scored_hypotheses;
     float best_score = std::numeric_limits<float>::lowest(); // Score for best combination of points
 
     /*  Numbering of corners and coordinate frame FOR THIS FUNCTION ONLY // TODO use normal numbering
@@ -191,11 +195,8 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
      */
 
     /// Try all combinations of three points
-    bool corners_found = false;
-
     cv::Point pS, pH1, pH2; // corner hypothesis where S ist not part of hypotenuse
     cv::Point cornerS, cornerH1, cornerH2; // current most probable corner hypothesis
-    cv::Point corner1, corner2, corner3; // most probable corner hypothesis (as right hand system)
     for (size_t i = 0; i < point_list.size(); i++) {
         pS = point_list[i];
         for (size_t j = 0; j < point_list.size(); j++) {
@@ -236,46 +237,48 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
                 float score = fwLengthTriangle * lengthTriangle -
                               fwProjectedSecantLength * projectedSecantLength -
                               fwSecantsLengthDiff * secantsLengthDiff;
-                if (best_score < score) {
-                    /// remember their addresses and distance
-                    corners_found = true;
-                    cornerS = pS;
-                    cornerH1 = pH1;
-                    cornerH2 = pH2;
-                    best_score = score;
+
+
+                // Keep hypothesis if its considered to be good (relative to current best)
+                if (score < cornerHypothesesCutoff*best_score) {
+                    continue;
+                } else{
+                    ImgLandmark lm;
+                    // corners
+                    lm.voCorners.push_back(pH1);
+                    lm.voCorners.push_back(pS);
+                    lm.voCorners.push_back(pH2);
+                    // id points
+                    for (size_t n = 0; n < point_list.size(); n++) {
+                        if (n == i || n == j || n == k) {
+                            continue;
+                        }
+                        lm.voIDPoints.push_back(point_list[n]);
+                    }
+                    scored_hypotheses.push_back(LmHypothesis(score, lm));
+                    if (score > best_score) {
+                      best_score = score;
+                    }
                 }
             }
         }
     }
-    if (!corners_found) {
-        return false;
+    //Sort out bad hypotheses (relative to total best)
+    auto bad_end = std::remove_if(scored_hypotheses.begin(), scored_hypotheses.end(),
+                              [this, best_score](LmHypothesis lmh){return lmh.first < cornerHypothesesCutoff*best_score;});
+
+    //Sort by score
+    std::sort (scored_hypotheses.begin(), bad_end, [](LmHypothesis a, LmHypothesis b){return a.first > b.first;});
+
+    for (auto it = scored_hypotheses.begin(); it != bad_end && it != scored_hypotheses.begin()+maxCornerHypotheses; it++) {
+      // ensure rhs
+      cv::Point vSH1 = it->second.voCorners[0] - it->second.voCorners[1];
+      cv::Point vSH2 = it->second.voCorners[2] - it->second.voCorners[1];
+      if(0. > vSH1.cross(vSH2)) {
+          std::swap(it->second.voCorners[0],it->second.voCorners[2]);
+      }
+      hypotheses.push_back(it->second);
     }
-
-    // Check whether H1 is corner 1 or 2
-    cv::Point vSH1 = cornerH1 - cornerS;
-    cv::Point vSH2 = cornerH2 - cornerS;
-    corner3 = cornerS;
-    if(0. < vSH1.cross(vSH2)) {
-        corner1 = cornerH1;
-        corner2 = cornerH2;
-    } else {
-        corner1 = cornerH2;
-        corner2 = cornerH1;
-    }
-
-    /// Move corner points from point list to empty corner point list
-
-    /// Store in output container (order is important)
-    corner_points.push_back(corner1);
-    corner_points.push_back(corner3);
-    corner_points.push_back(corner2);
-
-    /// Remove from input list
-    point_list.erase(std::remove(point_list.begin(), point_list.end(), corner1), point_list.end());
-    point_list.erase(std::remove(point_list.begin(), point_list.end(), corner2), point_list.end());
-    point_list.erase(std::remove(point_list.begin(), point_list.end(), corner3), point_list.end());
-
-    return true;
 }
 
 ///--------------------------------------------------------------------------------------///
@@ -283,9 +286,7 @@ bool LandmarkFinder::FindCorners(std::vector<cv::Point>& point_list, std::vector
 ///
 ///--------------------------------------------------------------------------------------///
 std::vector<ImgLandmark> LandmarkFinder::FindLandmarks(const std::vector<Cluster>& clusteredPoints) {
-
-    std::vector<ImgLandmark> OutputLandmarks;
-
+    landmarkHypotheses_.clear();
     for (auto& cluster : clusteredPoints) { /// go thru all clusters
 
         /// since most probably each cluster represents a landmark, create one
@@ -295,13 +296,9 @@ std::vector<ImgLandmark> LandmarkFinder::FindLandmarks(const std::vector<Cluster
             cluster; /// all points in this cluster are copied to the ID point vector for further examination
 
         /// FindCorners will move the three corner points into the corners vector
-        if (!FindCorners(newLandmark.voIDPoints, newLandmark.voCorners))
-            continue;
-
-        /// add this landmark to the landmark vector
-        OutputLandmarks.push_back(newLandmark);
+        FindCorners(cluster, landmarkHypotheses_);
     }
-    landmarkHypotheses_ = OutputLandmarks;
+    std::vector<ImgLandmark> OutputLandmarks(landmarkHypotheses_);
     GetIDs(OutputLandmarks);
 
     /// done and return landmarks
