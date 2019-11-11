@@ -282,6 +282,9 @@ void LandmarkFinder::FindCorners(const std::vector<cv::Point>& point_list, std::
     auto bad_end = std::remove_if(scored_hypotheses.begin(), scored_hypotheses.end(),
                               [this, best_score](LmHypothesis lmh){return lmh.first < cornerHypothesesCutoff*best_score;});
 
+    //Sort by score
+    std::sort (scored_hypotheses.begin(), bad_end, [](LmHypothesis a, LmHypothesis b){return a.first > b.first;});
+
     for (auto it = scored_hypotheses.begin(); it != bad_end && it != scored_hypotheses.begin()+maxCornerHypotheses; it++) {
       // ensure rhs
       cv::Point vSH1 = it->second.voIDPoints[0] - it->second.voIDPoints[1];
