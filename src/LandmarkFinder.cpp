@@ -215,15 +215,15 @@ void LandmarkFinder::FindCorners(const std::vector<cv::Point>& point_list, std::
 
                 float normS1 = cv::norm(s1);
                 float normS2 = cv::norm(s2);
-                float nH = cv::norm(h);
+                float normH = cv::norm(h);
 
                 /// Check if vH12 is reasonable hypotenuse
-                if (normS1 > hypotenuseTolerance * nH || normS2 > hypotenuseTolerance * nH) {
+                if (normS1 > hypotenuseTolerance * normH || normS2 > hypotenuseTolerance * normH) {
                     // Skip unprobable hypotenuse
                     continue;
                 }
 
-                float lengthTriangle = normS1 + normS2 + nH;
+                float lengthTriangle = normS1 + normS2 + normH;
                 float projectedSecantLength, secantsLengthDiff;
                 {
                     cv::Point s1 = pS - pH1;
